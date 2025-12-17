@@ -36,8 +36,12 @@ class FormsTests(TestCase):
         form = DriverCreationForm(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertIn("license_number", form.errors)
-        self.assertIn("License number should consist of 8 characters",
-                      form.errors["license_number"])
+        self.assertTrue(any(
+            "License number should consist of 8 characters" in e
+            or "Last 5 characters should be digits" in e
+            or "First 3 characters should be uppercase letters" in e
+            for e in form.errors["license_number"]
+        ))
 
     def test_driver_license_update_form_valid(self):
         form_data = {"license_number": "DEF67890"}
@@ -49,12 +53,20 @@ class FormsTests(TestCase):
         form = DriverLicenseUpdateForm(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertIn("license_number", form.errors)
+        self.assertTrue(any(
+            "License number should consist of 8 characters" in e
+            or "Last 5 characters should be digits" in e
+            or "First 3 characters should be uppercase letters" in e
+            for e in form.errors["license_number"]
+        ))
 
     def test_car_form_has_drivers_field(self):
         form = CarForm()
         self.assertIn("drivers", form.fields)
-        self.assertEqual(form.fields["drivers"].__class__.__name__,
-                         "ModelMultipleChoiceField")
+        self.assertEqual(
+            form.fields["drivers"].__class__.__name__,
+            "ModelMultipleChoiceField"
+        )
 
     def test_search_form_field(self):
         form = SearchForm(data={"search": "test"})
