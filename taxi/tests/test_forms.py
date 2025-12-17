@@ -29,7 +29,7 @@ class FormsTests(TestCase):
             "username": "badlicense",
             "password1": "ComplexPass123",
             "password2": "ComplexPass123",
-            "license_number": "XYZ12",  # некоректно
+            "license_number": "XYZ12",
             "first_name": "Jane",
             "last_name": "Doe",
         }
