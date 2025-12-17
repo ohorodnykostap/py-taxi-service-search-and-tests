@@ -79,10 +79,15 @@ class CustomViewsTests(TestCase):
         url = reverse("taxi:driver-update", args=[self.user.id])
 
         response = self.client.post(url, {"license_number": "WRONG123"})
-        self.assertFormError(
-            response, "form", "license_number",
-            "Last 5 characters should be digits"
-        )
+        form = response.context["form"]  # беремо форму з контексту
+        self.assertFalse(form.is_valid())
+        self.assertIn("license_number", form.errors)
+        self.assertTrue(any(
+            "License number should consist of 8 characters" in e
+            or "Last 5 characters should be digits" in e
+            or "First 3 characters should be uppercase letters" in e
+            for e in form.errors["license_number"]
+        ))
 
         response = self.client.post(url, {"license_number": "XYZ54321"})
         self.assertRedirects(response, reverse("taxi:driver-list"))
