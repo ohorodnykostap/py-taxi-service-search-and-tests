@@ -13,50 +13,66 @@ class CustomViewsTests(TestCase):
         cls.user = User.objects.create_user(
             username="testuser",
             password="testpass123",
-            license_number="ABC12345"
+            license_number="ABC12345",
         )
 
         cls.driver1 = User.objects.create_user(
             username="jonathan.byers",
             password="pass123",
-            license_number="JON12345"
+            license_number="JON12345",
         )
         cls.driver2 = User.objects.create_user(
             username="nancy.wheeler",
             password="pass123",
-            license_number="NAN12345"
+            license_number="NAN12345",
         )
 
-        cls.manufacturer1 = Manufacturer.objects.create(name="Toyota",
-                                                        country="Japan")
-        cls.manufacturer2 = Manufacturer.objects.create(name="Ford",
-                                                        country="USA")
+        cls.manufacturer1 = Manufacturer.objects.create(
+            name="Toyota",
+            country="Japan",
+        )
+        cls.manufacturer2 = Manufacturer.objects.create(
+            name="Ford",
+            country="USA",
+        )
 
-        cls.car1 = Car.objects.create(model="Yaris",
-                                      manufacturer=cls.manufacturer1)
-        cls.car2 = Car.objects.create(model="Focus",
-                                      manufacturer=cls.manufacturer2)
+        cls.car1 = Car.objects.create(
+            model="Yaris",
+            manufacturer=cls.manufacturer1,
+        )
+        cls.car2 = Car.objects.create(
+            model="Focus",
+            manufacturer=cls.manufacturer2,
+        )
 
     def setUp(self):
         self.client = Client()
-        self.client.login(username="testuser", password="testpass123")
+        self.client.login(
+            username="testuser",
+            password="testpass123",
+        )
 
     def test_toggle_assign_to_car_add_and_remove(self):
         url = reverse("taxi:toggle-car-assign", args=[self.car1.id])
 
         response = self.client.get(url)
-        self.assertRedirects(response, reverse("taxi:car-detail",
-                                               args=[self.car1.id]))
+        self.assertRedirects(
+            response,
+            reverse("taxi:car-detail", args=[self.car1.id]),
+        )
         self.assertIn(self.user, self.car1.drivers.all())
 
         response = self.client.get(url)
-        self.assertRedirects(response, reverse("taxi:car-detail",
-                                               args=[self.car1.id]))
+        self.assertRedirects(
+            response,
+            reverse("taxi:car-detail", args=[self.car1.id]),
+        )
         self.assertNotIn(self.user, self.car1.drivers.all())
 
     def test_driver_search_filtering(self):
         url = reverse("taxi:driver-list")
         response = self.client.get(url, {"search": "jonathan"})
+
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "jonathan.byers")
         self.assertNotContains(response, "nancy.wheeler")
@@ -64,6 +80,7 @@ class CustomViewsTests(TestCase):
     def test_car_search_filtering(self):
         url = reverse("taxi:car-list")
         response = self.client.get(url, {"search": "Yaris"})
+
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Yaris")
         self.assertNotContains(response, "Focus")
@@ -71,6 +88,7 @@ class CustomViewsTests(TestCase):
     def test_manufacturer_search_filtering(self):
         url = reverse("taxi:manufacturer-list")
         response = self.client.get(url, {"search": "Toyota"})
+
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Toyota")
         self.assertNotContains(response, "Ford")
@@ -78,18 +96,31 @@ class CustomViewsTests(TestCase):
     def test_license_update_validation(self):
         url = reverse("taxi:driver-update", args=[self.user.id])
 
-        response = self.client.post(url, {"license_number": "WRONG123"})
-        form = response.context["form"]  # беремо форму з контексту
+        response = self.client.post(
+            url,
+            {"license_number": "WRONG123"},
+        )
+        form = response.context["form"]
+
         self.assertFalse(form.is_valid())
         self.assertIn("license_number", form.errors)
-        self.assertTrue(any(
-            "License number should consist of 8 characters" in e
-            or "Last 5 characters should be digits" in e
-            or "First 3 characters should be uppercase letters" in e
-            for e in form.errors["license_number"]
-        ))
+        self.assertTrue(
+            any(
+                "License number should consist of 8 characters" in error
+                or "Last 5 characters should be digits" in error
+                or "First 3 characters should be uppercase letters" in error
+                for error in form.errors["license_number"]
+            )
+        )
 
-        response = self.client.post(url, {"license_number": "XYZ54321"})
-        self.assertRedirects(response, reverse("taxi:driver-list"))
+        response = self.client.post(
+            url,
+            {"license_number": "XYZ54321"},
+        )
+        self.assertRedirects(
+            response,
+            reverse("taxi:driver-list"),
+        )
+
         self.user.refresh_from_db()
         self.assertEqual(self.user.license_number, "XYZ54321")
