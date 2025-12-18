@@ -92,4 +92,3 @@ class CustomViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Toyota")
         self.assertNotContains(response, "Ford")
-
